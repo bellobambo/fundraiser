@@ -71,7 +71,7 @@ const Fundraiser = () => {
     <div className="min-h-screen bg-[#d496a7] text-[#3a2e39] p-6 font-['Press_Start_2P'] text-xs">
       <div className="max-w-4xl mx-auto grid gap-6">
         <h1 className="text-sm tracking-widest text-center text-[20px]">
-          Ajór
+          Àjó Sómólú
         </h1>
         <div className="flex justify-between items-center border-b-2 border-[#3a2e39] pb-3">
           <ConnectButton client={client} chain={chain} />
@@ -159,24 +159,20 @@ const ProjectCard = ({ projectId, account }: any) => {
 
   if (!project) return null;
 
+  const goal = parseFloat(formatEther(project[2]?.toString() || "0"));
+  const raised = parseFloat(formatEther(project[3]?.toString() || "0"));
+  const isCompleted = project[6] || raised >= goal;
+
   return (
     <div className="bg-[#e8c8d5] border-2 border-[#5e4352] p-4 mb-4">
       <h2 className="text-[#5e4352] mb-3 text-xs">
-        [PROJECT #{projectId.toString()}]
+        [PROJECT #{Number(projectId) + 1}]
       </h2>
       <div className="space-y-1">
         <p>Name: {project[1]}</p>
         <p>Owner: {project[0]}</p>
-        <p>
-          Goal:{" "}
-          {parseFloat(formatEther(project[2]?.toString() || "0")).toFixed(6)}{" "}
-          ETH
-        </p>
-        <p>
-          Raised:{" "}
-          {parseFloat(formatEther(project[3]?.toString() || "0")).toFixed(6)}{" "}
-          ETH
-        </p>
+        <p>Goal: {goal.toFixed(6)} ETH</p>
+        <p>Raised: {raised.toFixed(6)} ETH</p>
         <p>Start: {new Date(Number(project[4]) * 1000).toLocaleDateString()}</p>
         <p>End: {new Date(Number(project[5]) * 1000).toLocaleDateString()}</p>
         <p>Status: {project[6] ? "FUNDS RELEASED" : "FUNDRAISING"}</p>
@@ -188,15 +184,16 @@ const ProjectCard = ({ projectId, account }: any) => {
             placeholder="Amount (ETH)"
             value={contributionAmount}
             onChange={(e) => setContributionAmount(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || isCompleted}
           />
 
           <div className="flex justify-between gap-3 flex-wrap">
             <TransactionButton
               style={{
                 backgroundColor: "#d496a7",
-                opacity: isLoading ? 0.6 : 1,
-                cursor: isLoading ? "not-allowed" : "pointer",
+                opacity: isLoading || isCompleted ? 0.6 : 1,
+                cursor: isLoading || isCompleted ? "not-allowed" : "pointer",
+                filter: isCompleted ? "blur(1px)" : "none",
               }}
               transaction={() =>
                 prepareContractCall({
@@ -219,7 +216,7 @@ const ProjectCard = ({ projectId, account }: any) => {
                 setIsLoading(false);
                 alert("❌ Transaction failed. Please try again.");
               }}
-              disabled={project[6] || isLoading}
+              disabled={isLoading || isCompleted}
             >
               <span className="block px-4 py-2 text-xs text-[#3a2e39] bg-[#d496a7] hover:text-white transition">
                 {isLoading ? "Processing..." : "CONTRIBUTE"}
